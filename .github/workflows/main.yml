@@ -1,0 +1,30 @@
+name: Deploy
+
+on:
+  push:
+    branches: 
+      - main
+jobs:
+  build:
+  
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 4
+      matrix:
+        python-version: [3.9]
+    steps:
+    - uses: actions/checkout@v3
+    - name: executing remote ssh commands using password
+      uses: appleboy/ssh-action@master
+      with:
+        host: 165.22.28.72
+        username: ${{ secrets.USERNAME }}
+        password: ${{ secrets.PASSWORD }}
+        port: 22
+        script: |
+          cd /root/test_django_app/bot
+          source /root/venv/bin/activate
+          git pull
+          python manage.py migrate
+          python manage.py collectstatic --noinput
+          supervisorctl restart all
